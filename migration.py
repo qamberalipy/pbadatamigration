@@ -1,8 +1,8 @@
 import pandas as pd
 import requests
 import json
-
-ACCESS_TOKEN = "pat-na2-66555ece-8539-4a1b-891e-878cfec6df86"
+import os
+ACCESS_TOKEN = os.getenv("HUBSPOT_ACCESS_TOKEN")  # Ensure 
 CLEANED_FILE = "HubSpot_Final_Cleaned.csv"
 API_READY_FILE = "HubSpot_API_Ready.csv"
 URL = "https://api.hubapi.com/crm/v3/imports"
