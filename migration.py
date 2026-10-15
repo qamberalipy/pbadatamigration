@@ -11,6 +11,7 @@ URL = "https://api.hubapi.com/crm/v3/imports"
 df = pd.read_csv(CLEANED_FILE)
 
 # 2. Safely merge the unmapped columns into the standard 'Description' property
+# The Fax append logic has been removed so it stays in its own column
 def build_description(row):
     extras = []
     if pd.notna(row.get('Description')) and str(row.get('Description')).strip():
@@ -21,21 +22,19 @@ def build_description(row):
         extras.append(f"Email: {row['Company Email']}")
     if pd.notna(row.get('Phone Number 2')):
         extras.append(f"Phone 2: {row['Phone Number 2']}")
-    if pd.notna(row.get('Fax')):
-        extras.append(f"Fax: {row['Fax']}")
     return " | ".join(extras) if extras else ""
 
 df['Description'] = df.apply(build_description, axis=1)
 
-# 3. Strip the CSV down to ONLY the 8 columns HubSpot is expecting
+# 3. Strip the CSV down to 9 columns, now explicitly keeping 'Fax'
 columns_to_keep = [
     'Company Name', 'Street Address', 'City', 'State/Region', 
-    'Postal Code', 'Phone Number', 'Website URL', 'Description'
+    'Postal Code', 'Phone Number', 'Website URL', 'Fax', 'Description'
 ]
 df_api = df[columns_to_keep]
 df_api.to_csv(API_READY_FILE, index=False)
 
-# 4. Fire the perfect 8-column match to the API
+# 4. Fire the 9-column match to the API
 headers = {
     "Authorization": f"Bearer {ACCESS_TOKEN}"
 }
@@ -56,6 +55,7 @@ import_request = {
                     {"columnObjectTypeId": "0-2", "columnName": "Postal Code", "propertyName": "zip"},
                     {"columnObjectTypeId": "0-2", "columnName": "Phone Number", "propertyName": "phone"},
                     {"columnObjectTypeId": "0-2", "columnName": "Website URL", "propertyName": "domain"},
+                    {"columnObjectTypeId": "0-2", "columnName": "Fax", "propertyName": "fax"}, # <--- NEW FAX MAPPING
                     {"columnObjectTypeId": "0-2", "columnName": "Description", "propertyName": "description"}
                 ]
             }
